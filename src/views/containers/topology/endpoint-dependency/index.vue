@@ -15,7 +15,7 @@ limitations under the License. -->
 <template>
   <div class="endpoint-dependency-page">
     <div class="rk-dashboard-bar flex-h">
-      <ToolBarSelect :selectable="false" :title="this.$t('currentService')" :current="current" icon="package" />
+      <ToolBarSelect :selectable="false" :title="$t('currentService')" :current="current" icon="package" />
       <ToolBarEndpointSelect
         @onChoose="selectEndpoint"
         :title="$t('currentEndpoint')"
@@ -39,8 +39,8 @@ limitations under the License. -->
   import Vue from 'vue';
   import { Component, Watch, Prop } from 'vue-property-decorator';
   import { Action, Getter, State, Mutation } from 'vuex-class';
-  import ToolBarSelect from '@/views/components/dashboard/tool-bar-select.vue';
-  import ToolBarEndpointSelect from '@/views/components/dashboard/tool-bar-endpoint-select.vue';
+  import ToolBarSelect from '@/views/components/dashboard/tool-bar/tool-bar-select.vue';
+  import ToolBarEndpointSelect from '@/views/components/dashboard/tool-bar/tool-bar-endpoint-select.vue';
   import TopoEndpointDependency from '@/views/components/topology/topo-endpoint-dependency.vue';
 
   @Component({

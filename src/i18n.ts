@@ -15,22 +15,27 @@
  * limitations under the License.
  */
 
-import {
-  ProfileSegment,
-  CreateProfileTask,
-  GetProfileTaskList,
-  GetProfileTaskSegmentList,
-  GetProfileAnalyze,
-} from '../fragments/profile';
+import Vue from 'vue';
+import VueI18n from 'vue-i18n';
 
-export const queryProfileSegment = `query queryProfileSegment(${ProfileSegment.variable}) {${ProfileSegment.query}}`;
+import zh from '@/assets/lang/zh';
+import en from '@/assets/lang/en';
 
-export const saveProfileTask = `mutation createProfileTask(${CreateProfileTask.variable}) {${CreateProfileTask.query}}`;
+Vue.use(VueI18n);
 
-export const getProfileTaskList = `query getProfileTaskList(${GetProfileTaskList.variable}) {
-  ${GetProfileTaskList.query}}`;
+const savedLanguage = window.localStorage.getItem('lang');
+let language = navigator.language.split('-')[0];
+if (!savedLanguage) {
+  window.localStorage.setItem('lang', language);
+}
+language = savedLanguage ? savedLanguage : language;
 
-export const getProfileTaskSegmentList = `query getProfileTaskSegmentList(${GetProfileTaskSegmentList.variable}) {
-  ${GetProfileTaskSegmentList.query}}`;
+const i18n = new VueI18n({
+  locale: language,
+  messages: {
+    zh,
+    en,
+  },
+});
 
-export const getProfileAnalyze = `query getProfileAnalyze(${GetProfileAnalyze.variable}) {${GetProfileAnalyze.query}}`;
+export default i18n;

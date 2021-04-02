@@ -14,44 +14,46 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <div
-    class="rk-dashboard-bar-select cp flex-h"
+    class="rk-dashboard-bar-select flex-h"
     v-clickout="
       () => {
-        search = '';
         visible = false;
+        search = '';
       }
     "
-    :class="{ active: visible }"
+    :class="{ active: visible, cp: selectable, cd: !selectable }"
   >
-    <div class="rk-dashboard-bar-i flex-h" @click="visible = !visible">
+    <div class="rk-dashboard-bar-i flex-h" @click="selectable && (visible = !visible)">
       <svg class="icon lg mr-15">
         <use :xlink:href="`#${icon}`"></use>
       </svg>
       <div class="mr-15 rk-dashboard-bar-i-text">
         <div class="sm grey">{{ title }}</div>
-        <div class="ell" v-tooltip:right.ellipsis="current.label || ''">
+        <div class="selector-ell" v-tooltip:right.ellipsis="current.label || ''">
           {{ current.label }}
         </div>
       </div>
-      <svg class="icon lg trans" :style="`transform: rotate(${visible ? 180 : 0}deg)`">
+      <svg v-if="selectable" class="icon lg trans" :style="`transform: rotate(${visible ? 180 : 0}deg)`">
         <use xlink:href="#arrow-down"></use>
       </svg>
     </div>
-    <div class="rk-dashboard-sel" v-if="visible">
+    <div class="rk-dashboard-sel" v-if="visible && selectable">
       <div>
         <input type="text" class="rk-dashboard-sel-search" v-model="search" />
-        <svg class="icon sm close" style="margin-top: 3px;" @click="search = ''" v-if="search">
+        <svg class="icon sm close" @click="search = ''" v-if="search">
           <use xlink:href="#clear"></use>
         </svg>
       </div>
-      <div class="rk-dashboard-opt-wrapper scroll_hide">
-        <EndpointOpt
-          @handleSelect="handleSelect"
-          :class="{ active: i.key === current.key }"
+      <div class="rk-dashboard-opt-wrapper scroll_bar_style">
+        <div
+          class="rk-dashboard-opt ell"
+          @click="i.disabled ? () => {} : handleSelect(i)"
+          :class="{ active: i.key === current.key, disabled: i.disabled }"
           v-for="i in filterData"
           :key="i.key"
-          :data="i"
-        />
+        >
+          {{ i.label }}
+        </div>
       </div>
     </div>
   </div>
@@ -59,17 +61,15 @@ limitations under the License. -->
 
 <script lang="ts">
   import { Vue, Component, Prop } from 'vue-property-decorator';
-  import { Action } from 'vuex-class';
-  import EndpointOpt from './tool-bar-endpoint-select-opt.vue';
-  @Component({ components: { EndpointOpt } })
-  export default class ToolBarEndpointSelect extends Vue {
+  @Component
+  export default class ToolBarSelect extends Vue {
     @Prop() public data!: any;
     @Prop() public current!: any;
     @Prop() public title!: string;
     @Prop() public icon!: string;
+    @Prop({ type: Boolean, default: true }) public selectable!: boolean;
     public search: string = '';
     public visible: boolean = false;
-
     get filterData() {
       return this.data.filter((i: any) => i.label.toUpperCase().indexOf(this.search.toUpperCase()) !== -1);
     }
@@ -97,7 +97,11 @@ limitations under the License. -->
     }
   }
   .rk-dashboard-bar-i-text {
-    max-width: 250px;
+    max-width: 350px;
+    .selector-ell {
+      word-wrap: break-word;
+      word-break: break-all;
+    }
   }
   .rk-dashboard-bar-i {
     height: 100%;
@@ -131,6 +135,9 @@ limitations under the License. -->
     &.active,
     &:hover {
       background-color: #40454e;
+    }
+    &.disabled {
+      cursor: not-allowed;
     }
   }
   .rk-dashboard-sel-search {

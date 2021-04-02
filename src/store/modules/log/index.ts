@@ -34,7 +34,6 @@ export interface State {
   loading: boolean;
   conditions: any;
   supportQueryLogsByKeywords: boolean;
-  tagsList: string[];
 }
 
 const categories: Options[] = [
@@ -58,9 +57,16 @@ const logState: State = {
   categories,
   category: { label: 'All', key: 'ALL' },
   loading: false,
-  conditions: {},
+  conditions: {
+    traceId: localStorage.getItem('logTraceId') || '',
+    keywordsOfContent: localStorage.getItem('logKeywordsOfContent')
+      ? JSON.parse(localStorage.getItem('logKeywordsOfContent') || '')
+      : [],
+    excludingKeywordsOfContent: localStorage.getItem('logExcludingKeywordsOfContent')
+      ? JSON.parse(localStorage.getItem('logExcludingKeywordsOfContent') || '')
+      : [],
+  },
   supportQueryLogsByKeywords: true,
-  tagsList: localStorage.getItem('logTags') ? JSON.parse(localStorage.getItem('logTags') || '') : [],
 };
 
 // mutations
@@ -90,10 +96,13 @@ const mutations: MutationTree<State> = {
     state.supportQueryLogsByKeywords = isSupport;
   },
   [types.CLEAR_LOG_CONDITIONS](state: State) {
-    state.conditions = {};
-  },
-  [types.SET_TAG_LIST](state: State, data: string[]) {
-    state.tagsList = data;
+    state.conditions = {
+      date: state.conditions.date,
+    };
+    localStorage.removeItem('logKeywordsOfContent');
+    localStorage.removeItem('logExcludingKeywordsOfContent');
+    localStorage.removeItem('logTags');
+    localStorage.removeItem('logTraceId');
   },
 };
 

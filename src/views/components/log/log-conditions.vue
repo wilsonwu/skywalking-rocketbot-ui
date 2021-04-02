@@ -14,46 +14,95 @@ limitations under the License. -->
 <template>
   <div class="rk-search-conditions flex-v">
     <div class="flex-h">
-      <div class="mr-15">
-        <span class="sm b grey mr-10">{{ this.$t('traceID') }}:</span>
+      <div class="mr-15" v-show="rocketLog.type.key === cateGoryService">
+        <span class="sm b grey mr-10">{{ $t('traceID') }}:</span>
         <input
           type="text"
-          class="rk-trace-search-input dib"
+          class="rk-log-search-input dib"
+          v-model="traceId"
           @change="changeConditions($event, LogConditionsOpt.TraceID)"
         />
       </div>
-      <div class="mr-15">
-        <span class="sm b grey mr-10">{{ this.$t('keywordsOfContent') }}:</span>
-        <input
-          type="text"
-          class="rk-trace-search-input dib"
-          @change="changeConditions($event, LogConditionsOpt.KeywordsOfContent)"
-        />
+      <div class="search-time">
+        <span class="sm b grey mr-5">{{ $t('timeRange') }}:</span>
+        <RkDate class="sm" v-model="searchTime" position="bottom" format="YYYY-MM-DD HH:mm:ss" />
       </div>
-      <div class="mr-15">
-        <span class="sm b grey mr-10">{{ this.$t('excludingKeywordsOfContent') }}:</span>
+      <div class="mr-15" v-show="rocketLog.type.key === cateGoryService">
+        <span class="sm b grey mr-10">{{ $t('keywordsOfContent') }}:</span>
+        <span class="rk-log-tags" v-show="rocketLog.supportQueryLogsByKeywords">
+          <span
+            class="selected"
+            v-for="(item, index) in rocketLog.conditions.keywordsOfContent"
+            :key="`keywordsOfContent${index}`"
+          >
+            <span>{{ item }}</span>
+            <span class="remove-icon" @click="removeContent(index)">×</span>
+          </span>
+        </span>
         <input
           type="text"
-          class="rk-trace-search-input dib"
-          @change="changeConditions($event, LogConditionsOpt.ExcludingKeywordsOfContent)"
+          :disabled="!rocketLog.supportQueryLogsByKeywords"
+          class="rk-log-search-input dib mr-5"
+          v-model="keywordsOfContent"
+          @keyup="addLabels($event, LogConditionsOpt.KeywordsOfContent)"
         />
+        <span
+          class="log-tips"
+          v-show="!rocketLog.supportQueryLogsByKeywords"
+          v-tooltip:bottom="{ content: $t('keywordsOfContentLogTips') }"
+        >
+          <rk-icon icon="help" class="mr-5" />
+        </span>
+      </div>
+      <div class="mr-15" v-show="rocketLog.type.key === cateGoryService">
+        <span class="sm b grey mr-10">{{ $t('excludingKeywordsOfContent') }}:</span>
+        <span class="rk-log-tags" v-show="rocketLog.supportQueryLogsByKeywords">
+          <span
+            class="selected"
+            v-for="(item, index) in rocketLog.conditions.excludingKeywordsOfContent"
+            :key="`excludingKeywordsOfContent${index}`"
+          >
+            <span>{{ item }}</span>
+            <span class="remove-icon" @click="removeExcludeContent(index)">×</span>
+          </span>
+        </span>
+        <input
+          type="text"
+          :disabled="!rocketLog.supportQueryLogsByKeywords"
+          class="rk-log-search-input dib mr-5"
+          v-model="excludingKeywordsOfContent"
+          @keyup="addLabels($event, LogConditionsOpt.ExcludingKeywordsOfContent)"
+        />
+        <span
+          class="log-tips"
+          v-show="!rocketLog.supportQueryLogsByKeywords"
+          v-tooltip:bottom="{ content: $t('keywordsOfContentLogTips') }"
+        >
+          <rk-icon icon="help" class="mr-5" />
+        </span>
       </div>
     </div>
-    <div class="mr-10" style="padding-top: 10px">
-      <span class="sm grey">{{ this.$t('tags') }}: </span>
-      <span class="rk-trace-tags">
-        <span class="selected" v-for="(item, index) in rocketLog.tagsList" :key="index">
+    <div class="mr-10" style="padding-top: 10px" v-show="rocketLog.type.key === cateGoryService">
+      <span class="sm grey">{{ $t('tags') }}: </span>
+      <span class="rk-log-tags">
+        <span class="selected" v-for="(item, index) in tagsList" :key="index">
           <span>{{ item }}</span>
           <span class="remove-icon" @click="removeTags(index)">×</span>
         </span>
       </span>
-      <input type="text" :placeholder="this.$t('addTag')" v-model="tags" class="rk-trace-new-tag" @keyup="addLabels" />
-      <span class="trace-tips" v-tooltip:bottom="{ content: this.$t('tagsTip') }">
+      <input
+        type="text"
+        :placeholder="$t('addTag')"
+        v-model="tags"
+        class="rk-log-new-tag"
+        @keyup="addLabels($event, LogConditionsOpt.Tags)"
+      />
+      <span class="log-tips" v-tooltip:bottom="{ content: $t('logsTagsTip') }">
         <a
           target="blank"
           href="https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/configuration-vocabulary.md"
         >
-          {{ this.$t('tagsLink') }}
+          {{ $t('tagsLink') }}
         </a>
         <rk-icon icon="help" class="mr-5" />
       </span>
@@ -63,26 +112,41 @@ limitations under the License. -->
 
 <script lang="ts">
   import { Duration, Option } from '@/types/global';
-  import { Component, Vue } from 'vue-property-decorator';
+  import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
   import { Mutation, State } from 'vuex-class';
+  import { State as globalState } from '@/store/modules/global/index';
+  import { State as logState } from '@/store/modules/log/index';
+  import dateFormatStep from '@/utils/dateFormatStep';
 
   @Component({
     components: {},
   })
   export default class LogConditions extends Vue {
-    @State('rocketLog') private rocketLog: any;
+    @State('rocketbot') private rocketbotGlobal!: globalState;
+    @State('rocketLog') private rocketLog!: logState;
     @Mutation('SET_LOG_CONDITIONS') private SET_LOG_CONDITIONS: any;
     @Mutation('SET_TAG_LIST') private SET_TAG_LIST: any;
-
+    @Mutation('SET_KEYWORDS_CONTENT') private SET_KEYWORDS_CONTENT: any;
+    @Mutation('SET_EXCLUDING_KEYWORDS_CONTENT') private SET_EXCLUDING_KEYWORDS_CONTENT: any;
+    private keywordsOfContent: string = '';
+    private excludingKeywordsOfContent: string = '';
+    private tagsList: string[] = [];
     private tags: string = '';
+    private searchTime: Date[] = [];
+    private traceId: string = '';
     private LogConditionsOpt = {
       TraceID: 'traceId',
       Tags: 'tags',
       KeywordsOfContent: 'keywordsOfContent',
       ExcludingKeywordsOfContent: 'excludingKeywordsOfContent',
+      Date: 'date',
     };
+    private cateGoryService = 'service';
     private created() {
-      this.updateTags();
+      this.searchTime = [this.rocketbotGlobal.durationRow.start, this.rocketbotGlobal.durationRow.end];
+      (this.tagsList = localStorage.getItem('logTags') ? JSON.parse(localStorage.getItem('logTags') || '') : []),
+        this.updateTags();
+      this.traceId = localStorage.getItem('logTraceId') || '';
     }
     private changeConditions(item: any, type: string) {
       item = {
@@ -90,25 +154,71 @@ limitations under the License. -->
         key: item.target.value,
       };
       this.SET_LOG_CONDITIONS(item);
+      localStorage.setItem('logTraceId', this.traceId);
     }
-    private addLabels(event: KeyboardEvent) {
-      if (event.keyCode !== 13 || !this.tags) {
+    private addLabels(event: KeyboardEvent, type: string) {
+      if (event.keyCode !== 13) {
         return;
       }
-      const tagsList = this.rocketLog.tagsList;
-      tagsList.push(this.tags);
-      this.SET_TAG_LIST(tagsList);
-      this.tags = '';
-      this.updateTags();
+      if (type === this.LogConditionsOpt.Tags && !this.tags) {
+        return;
+      }
+      if (type === this.LogConditionsOpt.KeywordsOfContent && !this.keywordsOfContent) {
+        return;
+      }
+      if (type === this.LogConditionsOpt.ExcludingKeywordsOfContent && !this.excludingKeywordsOfContent) {
+        return;
+      }
+      if (type === this.LogConditionsOpt.Tags) {
+        this.tagsList.push(this.tags);
+        this.tags = '';
+        this.updateTags();
+      } else if (type === this.LogConditionsOpt.KeywordsOfContent) {
+        const keywordsOfContentList = this.rocketLog.conditions.keywordsOfContent || [];
+        keywordsOfContentList.push(this.keywordsOfContent);
+        this.SET_LOG_CONDITIONS({
+          label: type,
+          key: keywordsOfContentList,
+        });
+        this.keywordsOfContent = '';
+        this.updateContent(type);
+      } else if (type === this.LogConditionsOpt.ExcludingKeywordsOfContent) {
+        const excludingKeywordsOfContentList = this.rocketLog.conditions.excludingKeywordsOfContent || [];
+        excludingKeywordsOfContentList.push(this.excludingKeywordsOfContent);
+        this.SET_LOG_CONDITIONS({
+          label: type,
+          key: excludingKeywordsOfContentList,
+        });
+        this.excludingKeywordsOfContent = '';
+        this.updateContent(type);
+      }
+    }
+    private removeContent(index: number) {
+      const keywordsOfContentList = this.rocketLog.conditions.keywordsOfContent || [];
+      keywordsOfContentList.splice(index, 1);
+      this.SET_LOG_CONDITIONS({
+        label: this.LogConditionsOpt.KeywordsOfContent,
+        key: keywordsOfContentList,
+      });
+      this.keywordsOfContent = '';
+      this.updateContent(this.LogConditionsOpt.KeywordsOfContent);
+    }
+    private removeExcludeContent(index: number) {
+      const excludingKeywordsOfContentList = this.rocketLog.conditions.excludingKeywordsOfContent || [];
+      excludingKeywordsOfContentList.splice(index, 1);
+      this.SET_LOG_CONDITIONS({
+        label: this.LogConditionsOpt.ExcludingKeywordsOfContent,
+        key: excludingKeywordsOfContentList,
+      });
+      this.excludingKeywordsOfContent = '';
+      this.updateContent(this.LogConditionsOpt.ExcludingKeywordsOfContent);
     }
     private removeTags(index: number) {
-      const tagsList = this.rocketLog.tagsList;
-      tagsList.splice(index, 1);
-      this.SET_TAG_LIST(tagsList);
+      this.tagsList.splice(index, 1);
       this.updateTags();
     }
     private updateTags() {
-      const tagsMap = this.rocketLog.tagsList.map((item: string) => {
+      const tagsMap = this.tagsList.map((item: string) => {
         const key = item.substring(0, item.indexOf('='));
 
         return {
@@ -120,12 +230,66 @@ limitations under the License. -->
         label: this.LogConditionsOpt.Tags,
         key: tagsMap,
       });
-      localStorage.setItem('logTags', JSON.stringify(this.rocketLog.tagsList));
+      localStorage.setItem('logTags', JSON.stringify(this.tagsList));
+    }
+    private updateContent(type: string) {
+      let list = [];
+      let storageContent = '';
+      if (type === this.LogConditionsOpt.KeywordsOfContent) {
+        list = this.rocketLog.conditions.keywordsOfContent;
+        storageContent = 'logKeywordsOfContent';
+      } else if (type === this.LogConditionsOpt.ExcludingKeywordsOfContent) {
+        list = this.rocketLog.conditions.excludingKeywordsOfContent;
+        storageContent = 'logExcludingKeywordsOfContent';
+      }
+
+      localStorage.setItem(storageContent, JSON.stringify(list));
+    }
+    private globalTimeFormat(time: Date[]) {
+      let step = 'MINUTE';
+      const unix = Math.round(time[1].getTime()) - Math.round(time[0].getTime());
+      if (unix <= 60 * 60 * 1000) {
+        step = 'MINUTE';
+      } else if (unix <= 24 * 60 * 60 * 1000) {
+        step = 'HOUR';
+      } else {
+        step = 'DAY';
+      }
+      return {
+        start: dateFormatStep(time[0], step, true),
+        end: dateFormatStep(time[1], step, true),
+        step,
+      };
+    }
+    @Watch('rocketLog.conditions')
+    private clearTags() {
+      if (!this.rocketLog.conditions.tags) {
+        this.tagsList = [];
+      }
+      if (!this.rocketLog.conditions.traceId) {
+        this.traceId = '';
+      }
+    }
+    @Watch('searchTime')
+    private updateDate() {
+      this.SET_LOG_CONDITIONS({
+        label: this.LogConditionsOpt.Date,
+        key: this.globalTimeFormat([
+          new Date(
+            this.searchTime[0].getTime() +
+              (parseInt(String(this.rocketbotGlobal.utc), 10) + new Date().getTimezoneOffset() / 60) * 3600000,
+          ),
+          new Date(
+            this.searchTime[1].getTime() +
+              (parseInt(String(this.rocketbotGlobal.utc), 10) + new Date().getTimezoneOffset() / 60) * 3600000,
+          ),
+        ]),
+      });
     }
   }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
   .rk-search-conditions {
     width: 100%;
     background-color: #484b55;
@@ -175,8 +339,35 @@ limitations under the License. -->
       font-size: 12px;
       margin: 0 2px;
     }
-    .trace-tips {
+    .log-tips {
       color: #eee;
+    }
+    .search-time {
+      color: #eee;
+    }
+
+    .rk-log-search-input {
+      border-style: unset;
+      outline: 0;
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+
+    .rk-log-tags {
+      padding: 1px 5px 0 0;
+      border-radius: 3px;
+      height: 24px;
+      display: inline-block;
+      vertical-align: top;
+    }
+
+    .rk-log-new-tag {
+      border-style: unset;
+      outline: 0;
+      padding: 2px 5px;
+      border-radius: 3px;
+      width: 175px;
+      margin-right: 3px;
     }
   }
 </style>

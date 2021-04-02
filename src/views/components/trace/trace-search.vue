@@ -17,7 +17,7 @@ limitations under the License. -->
   <div class="rk-trace-search">
     <div>
       <a class="rk-trace-clear-btn r" @click="status = !status">
-        <span class="mr-5 vm">{{ this.$t('more') }}</span>
+        <span class="mr-5 vm">{{ $t('more') }}</span>
         <svg class="icon trans vm" :style="`transform: rotate(${status ? 180 : 0}deg);`">
           <use xlink:href="#arrow-down"></use>
         </svg>
@@ -26,25 +26,25 @@ limitations under the License. -->
         <svg class="icon mr-5 vm">
           <use xlink:href="#search"></use>
         </svg>
-        <span class="vm">{{ this.$t('search') }}</span>
+        <span class="vm">{{ $t('search') }}</span>
       </a>
       <a class="rk-trace-clear-btn r mr-10" @click="clearSearch">
         <svg class="icon mr-5 vm">
           <use xlink:href="#clear"></use>
         </svg>
-        <span class="vm">{{ this.$t('clear') }}</span>
+        <span class="vm">{{ $t('clear') }}</span>
       </a>
       <div class="flex-h">
         <TraceSelect
           :hasSearch="true"
-          :title="this.$t('service')"
+          :title="$t('service')"
           :value="service"
           @input="chooseService"
           :data="rocketTrace.services"
         />
-        <TraceSelect :hasSearch="true" :title="this.$t('instance')" v-model="instance" :data="rocketTrace.instances" />
+        <TraceSelect :hasSearch="true" :title="$t('instance')" v-model="instance" :data="rocketTrace.instances" />
         <TraceSelect
-          :title="this.$t('status')"
+          :title="$t('status')"
           :value="traceState"
           @input="chooseStatus"
           :data="[
@@ -54,7 +54,7 @@ limitations under the License. -->
           ]"
         />
         <div class="mr-10" style="padding: 3px 15px 0">
-          <div class="sm grey">{{ this.$t('endpointName') }}</div>
+          <div class="sm grey">{{ $t('endpointName') }}</div>
           <input type="text" v-model="endpointName" class="rk-trace-search-input" />
         </div>
       </div>
@@ -62,11 +62,11 @@ limitations under the License. -->
     <div class="rk-trace-search-more" v-show="status">
       <div class="flex-h">
         <div class="mr-15">
-          <span class="sm b grey mr-10">{{ this.$t('traceID') }}:</span>
+          <span class="sm b grey mr-10">{{ $t('traceID') }}:</span>
           <input type="text" v-model="traceId" class="rk-trace-search-input dib" />
         </div>
         <div class="mr-15">
-          <span class="sm b grey mr-10">{{ this.$t('duration') }}:</span>
+          <span class="sm b grey mr-10">{{ $t('duration') }}:</span>
           <div class="rk-trace-search-range dib">
             <input class="vm tc" v-model="minTraceDuration" />
             <span class="grey vm">-</span>
@@ -74,32 +74,26 @@ limitations under the License. -->
           </div>
         </div>
         <div>
-          <span class="sm b grey mr-5">{{ this.$t('timeRange') }}:</span>
-          <RkDate class="sm" v-model="time" position="bottom" format="YYYY-MM-DD HH:mm:ss" />
+          <span class="sm b grey mr-5">{{ $t('timeRange') }}:</span>
+          <RkDate class="sm" v-model="time" position="bottom" format="YYYY-MM-DD HH:mm" />
         </div>
       </div>
       <div class="flex-h">
         <div class="mr-10" style="padding-top: 5px">
-          <span class="sm grey">{{ this.$t('tags') }}: </span>
+          <span class="sm grey">{{ $t('tags') }}: </span>
           <span class="rk-trace-tags">
             <span class="selected" v-for="(item, index) in tagsList" :key="index">
               <span>{{ item }}</span>
               <span class="remove-icon" @click="removeTags(index)">×</span>
             </span>
           </span>
-          <input
-            type="text"
-            :placeholder="this.$t('addTag')"
-            v-model="tags"
-            class="rk-trace-new-tag"
-            @keyup="addLabels"
-          />
-          <span class="trace-tips" v-tooltip:bottom="{ content: this.$t('tagsTip') }">
+          <input type="text" :placeholder="$t('addTag')" v-model="tags" class="rk-trace-new-tag" @keyup="addLabels" />
+          <span class="trace-tips" v-tooltip:bottom="{ content: $t('traceTagsTip') }">
             <a
               target="blank"
               href="https://github.com/apache/skywalking/blob/master/docs/en/setup/backend/configuration-vocabulary.md"
             >
-              {{ this.$t('tagsLink') }}
+              {{ $t('tagsLink') }}
             </a>
             <rk-icon icon="help" class="mr-5" />
           </span>
@@ -114,11 +108,14 @@ limitations under the License. -->
   import { Component, Vue, Watch } from 'vue-property-decorator';
   import { Action, Getter, Mutation, State } from 'vuex-class';
   import TraceSelect from '../common/trace-select.vue';
+  import { State as traceState } from '@/store/modules/trace/index';
+  import { State as globalState } from '@/store/modules/global/index';
+  import dateFormatStep from '@/utils/dateFormatStep';
 
   @Component({ components: { TraceSelect } })
   export default class TraceSearch extends Vue {
-    @State('rocketbot') private rocketbotGlobal: any;
-    @State('rocketTrace') private rocketTrace: any;
+    @State('rocketbot') private rocketbotGlobal!: globalState;
+    @State('rocketTrace') private rocketTrace!: traceState;
     @Getter('durationTime') private durationTime: any;
     @Getter('duration') private duration: any;
     @Action('RESET_DURATION') private RESET_DURATION: any;
@@ -158,39 +155,6 @@ limitations under the License. -->
         });
       }
     }
-    private dateFormat(date: Date, step: string) {
-      const year = date.getFullYear();
-      const monthTemp = date.getMonth() + 1;
-      let month: string = `${monthTemp}`;
-      if (monthTemp < 10) {
-        month = `0${monthTemp}`;
-      }
-
-      const dayTemp = date.getDate();
-      let day: string = `${dayTemp}`;
-      if (dayTemp < 10) {
-        day = `0${dayTemp}`;
-      }
-      if (step === 'DAY' || step === 'MONTH') {
-        return `${year}-${month}-${day}`;
-      }
-      const hourTemp = date.getHours();
-      let hour: string = `${hourTemp}`;
-      if (hourTemp < 10) {
-        hour = `0${hourTemp}`;
-      }
-      if (step === 'HOUR') {
-        return `${year}-${month}-${day} ${hour}`;
-      }
-      const minuteTemp = date.getMinutes();
-      let minute: string = `${minuteTemp}`;
-      if (minuteTemp < 10) {
-        minute = `0${minuteTemp}`;
-      }
-      if (step === 'MINUTE') {
-        return `${year}-${month}-${day} ${hour}${minute}`;
-      }
-    }
 
     private globalTimeFormat(time: Date[]) {
       let step = 'MINUTE';
@@ -203,8 +167,8 @@ limitations under the License. -->
         step = 'DAY';
       }
       return {
-        start: this.dateFormat(time[0], step),
-        end: this.dateFormat(time[1], step),
+        start: dateFormatStep(time[0], step, false),
+        end: dateFormatStep(time[1], step, false),
         step,
       };
     }
@@ -232,11 +196,11 @@ limitations under the License. -->
         queryDuration: this.globalTimeFormat([
           new Date(
             this.time[0].getTime() +
-              (parseInt(this.rocketbotGlobal.utc, 10) + new Date().getTimezoneOffset() / 60) * 3600000,
+              (parseInt(String(this.rocketbotGlobal.utc), 10) + new Date().getTimezoneOffset() / 60) * 3600000,
           ),
           new Date(
             this.time[1].getTime() +
-              (parseInt(this.rocketbotGlobal.utc, 10) + new Date().getTimezoneOffset() / 60) * 3600000,
+              (parseInt(String(this.rocketbotGlobal.utc), 10) + new Date().getTimezoneOffset() / 60) * 3600000,
           ),
         ]),
         traceState: this.traceState.key,
@@ -374,8 +338,7 @@ limitations under the License. -->
     vertical-align: top;
   }
 
-  .rk-trace-search-range,
-  .rk-auto-select {
+  .rk-trace-search-range {
     border-radius: 3px;
     background-color: #fff;
     padding: 1px;
@@ -392,11 +355,16 @@ limitations under the License. -->
     padding: 3px 9px;
     background-color: #484b55;
     border-radius: 4px;
-    margin-top: 12px;
+    color: #eee;
+    font-weight: normal;
+    cursor: pointer;
 
     &.bg-blue {
       background-color: #448dfe;
     }
+  }
+  .rk-trace-search-btn {
+    margin-top: 12px;
   }
 
   .rk-trace-clear-btn {

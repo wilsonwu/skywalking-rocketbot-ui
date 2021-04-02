@@ -19,7 +19,7 @@ limitations under the License. -->
         <use xlink:href="#spinner"></use>
       </svg>
     </div>
-    <LogTable :tableData="data" :type="`service`">
+    <LogTable :tableData="data" :type="`service`" :noLink="noLink">
       <div class="log-tips" v-if="!data.length">{{ $t('noData') }}</div>
     </LogTable>
     <rk-sidebox :width="'800px'" :show.sync="showDetail" :title="$t('logDetail')">
@@ -41,7 +41,7 @@ limitations under the License. -->
 </template>
 
 <script lang="ts">
-  import { Component, Prop, Vue } from 'vue-property-decorator';
+  import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
   import { Mutation, State } from 'vuex-class';
   import LogTable from './log-table/log-table.vue';
   import { ServiceLogDetail } from './log-table/log-constant';
@@ -51,36 +51,32 @@ limitations under the License. -->
     components: { LogTable },
   })
   export default class LogServiceDetail extends Vue {
-    @State('rocketLog') private logState: any;
     @Prop() private data: any;
     @Prop() private loading!: true;
-    @Prop() private showBtnDetail: any;
+    @Prop() private noLink!: boolean;
 
     private columns = ServiceLogDetail;
-    private showDetail = false;
+    private showDetail: boolean = false;
     private list = [];
     private currentLog: any = {};
-    private logContent: any = '';
-    private logTags: any = '';
-    private formatJson = formatJson;
-    private created() {
-      this.$eventBus.$on('HANDLE-SELECT-LOG', this, this.handleSelectLog);
-    }
-    private handleSelectLog(data: any) {
+    private logContent: string = '';
+    private logTags: string = '';
+
+    private handleSelectLog(data: any[]) {
       this.currentLog = data;
-      this.logTags = this.currentLog.tags.map((d: any) => {
+      this.logTags = this.currentLog.tags.map((d: { key: string; value: string }) => {
         return `${d.key} = ${d.value}`;
       });
       if (this.currentLog.contentType === 'JSON') {
         this.logContent = formatJson(JSON.parse(this.currentLog.content));
-      } else if (this.currentLog.contentType === 'TEXT') {
-        this.logContent = this.currentLog.content;
       } else {
         this.logContent = this.currentLog.content;
       }
-      if (!this.showBtnDetail) {
-        this.showDetail = true;
-      }
+      this.showDetail = true;
+    }
+    @Watch('data')
+    private bindSelect() {
+      this.$eventBus.$on('HANDLE-SELECT-LOG', this, this.handleSelectLog);
     }
   }
 </script>

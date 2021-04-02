@@ -171,8 +171,8 @@ const m = {
   defaultOrder: 'Default Order',
   chartType: 'Chart Type',
   currentDepth: 'Current Depth',
-  tagsTip:
-    'Only tags defined in the core/default/searchableTagKeys are searchable. Check more details on the Configuration Vocabulary page',
+  traceTagsTip: `Only tags defined in the core/default/searchableTracesTags are searchable.
+  Check more details on the Configuration Vocabulary page`,
   tagsLink: 'Configuration Vocabulary page',
   addTag: 'Please add a tag',
   log: 'Log',
@@ -186,6 +186,7 @@ const m = {
   errorPage: 'Error Page',
   category: 'Category',
   grade: 'Grade',
+  relatedTraceLogs: 'Related Logs',
   setConditions: 'More Conditions',
   metricName: 'Metric Name',
   keywordsOfContent: 'Keys Of Content',
@@ -194,6 +195,12 @@ const m = {
   isError: 'Error',
   contentType: 'Content Type',
   content: 'Content',
+  viewLogs: 'View Logs',
+  logsTagsTip: `Only tags defined in the core/default/searchableLogsTags are searchable.
+  Check more details on the Configuration Vocabulary page`,
+  keywordsOfContentLogTips: 'Current storage of SkyWalking OAP server does not support this.',
+  instanceAttributes: 'Instance Attributes',
+  value: 'Value',
 };
 
 export default m;

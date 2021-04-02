@@ -171,7 +171,7 @@ const m = {
   defaultOrder: '默认顺序',
   chartType: '图表类型',
   currentDepth: '当前深度',
-  tagsTip: '只有core/default/searchableTagKeys中定义的标记才可搜索。查看配置词汇表页面上的更多详细信息。',
+  traceTagsTip: '只有core/default/searchableTracesTags中定义的标记才可搜索。查看配置词汇表页面上的更多详细信息。',
   tagsLink: '配置词汇页',
   addTag: '请添加标签',
   log: '日志',
@@ -185,6 +185,7 @@ const m = {
   errorPage: '错误页面',
   category: '类别',
   grade: '等级',
+  relatedTraceLogs: '相关的日志',
   setConditions: '更多条件',
   metricName: '指标名称',
   keywordsOfContent: '内容关键词',
@@ -193,6 +194,11 @@ const m = {
   isError: '错误',
   contentType: '内容类型',
   content: '内容',
+  viewLogs: '查看日志',
+  logsTagsTip: '只有core/default/searchableLogsTags中定义的标记才可搜索。查看配置词汇表页面上的更多详细信息。',
+  keywordsOfContentLogTips: 'SkyWalking OAP服务器的当前存储不支持此操作',
+  instanceAttributes: '查看实例属性',
+  value: '数值',
 };
 
 export default m;

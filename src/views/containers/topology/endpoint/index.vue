@@ -45,7 +45,7 @@ limitations under the License. -->
           </span>
         </div>
       </span>
-      <ToolBarSelect :selectable="false" :title="this.$t('currentService')" :current="current" icon="package" />
+      <ToolBarSelect :selectable="false" :title="$t('currentService')" :current="current" icon="package" />
       <ToolBarEndpointSelect
         @onChoose="selectEndpoint"
         :title="$t('currentEndpoint')"
@@ -63,8 +63,8 @@ limitations under the License. -->
   import { Component, Watch, Prop } from 'vue-property-decorator';
   import { Action, Getter, State, Mutation } from 'vuex-class';
   import EndpointsSurvey from './endpoints-survey.vue';
-  import ToolBarSelect from '@/views/components/dashboard/tool-bar-select.vue';
-  import ToolBarEndpointSelect from '@/views/components/dashboard/tool-bar-endpoint-select.vue';
+  import ToolBarSelect from '@/views/components/dashboard/tool-bar/tool-bar-select.vue';
+  import ToolBarEndpointSelect from '@/views/components/dashboard/tool-bar/tool-bar-endpoint-select.vue';
   import { readFile } from '@/utils/readFile';
   import { saveFile } from '@/utils/saveFile';
   import { ObjectsType } from '../../../../constants/constant';

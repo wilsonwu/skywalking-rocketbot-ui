@@ -46,7 +46,7 @@ limitations under the License. -->
           </span>
         </div>
       </span>
-      <ToolBarSelect :selectable="false" :title="this.$t('currentService')" :current="current" icon="package" />
+      <ToolBarSelect :selectable="false" :title="$t('currentService')" :current="current" icon="package" />
       <ToolBarSelect
         @onChoose="selectInstance"
         :title="$t('currentInstance')"
@@ -61,9 +61,8 @@ limitations under the License. -->
 
 <script lang="ts">
   import InstancesSurvey from './instances-survey.vue';
-  import ToolBarSelect from '@/views/components/dashboard/tool-bar-select.vue';
-  import ToolBarEndpointSelect from '@/views/components/dashboard/tool-bar-endpoint-select.vue';
-  import _ from 'lodash';
+  import ToolBarSelect from '@/views/components/dashboard/tool-bar/tool-bar-select.vue';
+  import ToolBarEndpointSelect from '@/views/components/dashboard/tool-bar/tool-bar-endpoint-select.vue';
   import Vue from 'vue';
   import { Component, PropSync, Watch, Prop } from 'vue-property-decorator';
   import { Action, Getter, State, Mutation } from 'vuex-class';

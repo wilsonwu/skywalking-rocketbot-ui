@@ -17,59 +17,56 @@ limitations under the License. -->
       <div class="flex-h">
         <ToolBarSelect
           @onChoose="selectCategroy"
-          :title="this.$t('logCategory')"
+          :title="$t('logCategory')"
           :current="logState.type"
           :data="logState.logCategories"
           icon="chart"
         />
         <ToolBarSelect
           @onChoose="selectService"
-          :title="this.$t('service')"
+          :title="$t('service')"
           :current="rocketOption.currentService"
           :data="rocketOption.services"
           icon="package"
         />
         <ToolBarSelect
           @onChoose="selectInstance"
-          :title="logState.type.key === cateGoryBrowser ? this.$t('version') : this.$t('currentInstance')"
+          :title="logState.type.key === cateGoryBrowser ? $t('version') : $t('currentInstance')"
           :current="rocketOption.currentInstance"
           :data="rocketOption.instances"
           icon="disk"
         />
         <ToolBarSelect
           @onChoose="selectEndpoint"
-          :title="logState.type.key === cateGoryBrowser ? this.$t('page') : this.$t('currentEndpoint')"
+          :title="logState.type.key === cateGoryBrowser ? $t('page') : $t('currentEndpoint')"
           :current="rocketOption.currentEndpoint"
           :data="rocketOption.endpoints"
           icon="code"
         />
         <ToolBarSelect
+          v-if="logState.type.key === cateGoryBrowser"
           @onChoose="SELECT_ERROR_CATALOG"
-          :title="this.$t('errorCatalog')"
+          :title="$t('errorCatalog')"
           :current="logState.category"
           :data="logState.categories"
           icon="epic"
         />
       </div>
       <span class="flex-h rk-right">
-        <a
-          class="rk-log-search-btn bg-blue mr-10"
-          v-if="logState.type.key !== cateGoryBrowser"
-          @click="openConditionsBox"
-        >
+        <a class="rk-log-search-btn bg-blue mr-10" @click="openConditionsBox">
           <rk-icon icon="settings" class="mr-5" />
           <span class="vm">{{ $t('setConditions') }}</span>
         </a>
         <a class="rk-log-search-btn bg-blue mr-10" @click="queryLogs">
           <rk-icon icon="search" class="mr-5" />
-          <span class="vm">{{ this.$t('search') }}</span>
+          <span class="vm">{{ $t('search') }}</span>
         </a>
         <a class="rk-log-clear-btn r mr-10" @click="clearSearch">
           <rk-icon icon="clear" class="mr-5" />
-          <span class="vm">{{ this.$t('clear') }}</span>
+          <span class="vm">{{ $t('clear') }}</span>
         </a>
 
-        <RkPage :currentSize="10" :currentPage="pageNum" @changePage="handleRefresh" :total="logState.total" />
+        <RkPage :currentSize="pageSize" :currentPage="pageNum" @changePage="handleRefresh" :total="logState.total" />
       </span>
     </div>
     <div class="flex-h" v-show="showConditionsBox">
@@ -83,21 +80,22 @@ limitations under the License. -->
   import { Component, Vue } from 'vue-property-decorator';
   import { Action, Getter, Mutation, State } from 'vuex-class';
   import TraceSelect from '../common/trace-select.vue';
-  import ToolBarSelect from '../dashboard/tool-bar-select.vue';
-  import ToolBarEndpointSelect from '../dashboard/tool-bar-endpoint-select.vue';
+  import ToolBarSelect from '../dashboard/tool-bar/tool-bar-select.vue';
+  import ToolBarEndpointSelect from '../dashboard/tool-bar/tool-bar-endpoint-select.vue';
   import LogConditions from './log-conditions.vue';
+  import { State as logState } from '@/store/modules/log/index';
+  import { State as optionState } from '@/store/modules/global/selectors';
 
   @Component({
     components: { TraceSelect, ToolBarSelect, ToolBarEndpointSelect, LogConditions },
   })
   export default class Bar extends Vue {
-    @State('rocketLog') private logState: any;
-    @State('rocketOption') private rocketOption: any;
+    @State('rocketLog') private logState!: logState;
+    @State('rocketOption') private rocketOption!: optionState;
     @Mutation('SELECT_LOG_TYPE') private SELECT_LOG_TYPE: any;
     @Mutation('SELECT_ERROR_CATALOG') private SELECT_ERROR_CATALOG: any;
     @Mutation('SET_EVENTS') private SET_EVENTS: any;
     @Mutation('CLEAR_LOG_CONDITIONS') private CLEAR_LOG_CONDITIONS: any;
-    @Mutation('SET_TAG_LIST') private SET_TAG_LIST: any;
     @Action('SELECT_SERVICE') private SELECT_SERVICE: any;
     @Action('SELECT_ENDPOINT') private SELECT_ENDPOINT: any;
     @Action('SELECT_INSTANCE') private SELECT_INSTANCE: any;
@@ -110,6 +108,7 @@ limitations under the License. -->
     private cateGoryBrowser = 'browser';
     private showConditionsBox = true;
     private logPage = 'Log';
+    private pageSize = 20;
 
     private beforeMount() {
       this.MIXHANDLE_GET_OPTION({
@@ -123,15 +122,6 @@ limitations under the License. -->
         .then(() => {
           this.queryLogs();
         });
-      this.SET_EVENTS([
-        () => {
-          this.queryLogs();
-        },
-      ]);
-    }
-
-    private beforeDestroy() {
-      this.SET_EVENTS([]);
     }
 
     private handleRefresh(pageNum: number) {
@@ -167,12 +157,10 @@ limitations under the License. -->
       this.SELECT_ERROR_CATALOG({ label: 'All', key: 'ALL' });
       this.CLEAR_LOG_CONDITIONS();
       this.queryLogs();
-      window.localStorage.removeItem('logTags');
-      this.SET_TAG_LIST([]);
     }
 
     private queryLogs() {
-      const { category, conditions, type } = this.logState;
+      const { category, conditions, type, supportQueryLogsByKeywords } = this.logState;
       const { currentService, currentInstance, currentEndpoint } = this.rocketOption;
 
       this.QUERY_LOGS({
@@ -183,26 +171,23 @@ limitations under the License. -->
                 serviceVersionId: currentInstance.key,
                 pagePathId: currentEndpoint.key,
                 category: category.key,
-                paging: { pageNum: this.pageNum, pageSize: 35, needTotal: true },
-                queryDuration: this.durationTime,
+                paging: { pageNum: this.pageNum, pageSize: this.pageSize, needTotal: true },
+                queryDuration: conditions.date,
               }
             : {
                 serviceId: currentService.key || undefined,
                 serviceInstanceId: currentInstance.key || undefined,
                 endpointId: currentEndpoint.key || undefined,
-                state: category.key,
-                excludingKeywordsOfContent:
-                  this.logState.supportQueryLogsByKeywords && conditions.excludingKeywordsOfContent
-                    ? conditions.excludingKeywordsOfContent.split(',')
-                    : undefined,
                 keywordsOfContent:
-                  this.logState.supportQueryLogsByKeywords && conditions.keywordsOfContent
-                    ? conditions.keywordsOfContent.split(',')
+                  supportQueryLogsByKeywords && conditions.keywordsOfContent ? conditions.keywordsOfContent : undefined,
+                excludingKeywordsOfContent:
+                  supportQueryLogsByKeywords && conditions.excludingKeywordsOfContent
+                    ? conditions.excludingKeywordsOfContent
                     : undefined,
                 relatedTrace: conditions.traceId ? { traceId: conditions.traceId } : undefined,
                 tags: conditions.tags,
-                paging: { pageNum: this.pageNum, pageSize: 35, needTotal: true },
-                queryDuration: conditions.traceId ? undefined : this.durationTime,
+                paging: { pageNum: this.pageNum, pageSize: this.pageSize, needTotal: true },
+                queryDuration: conditions.traceId ? undefined : conditions.date,
               },
       });
     }

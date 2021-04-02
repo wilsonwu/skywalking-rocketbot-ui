@@ -17,28 +17,28 @@ limitations under the License. -->
   <div class="rk-profile-header">
     <div>
       <a class="rk-new-task-btn r" @click="showDialogTask">
-        <span class="mr-5 vm">{{ this.$t('newTask') }}</span>
+        <span class="mr-5 vm">{{ $t('newTask') }}</span>
       </a>
       <a class="rk-profile-header-btn bg-blue r mr-10" @click="searchTask">
         <svg class="icon mr-5 vm">
           <use xlink:href="#search"></use>
         </svg>
-        <span class="vm">{{ this.$t('search') }}</span>
+        <span class="vm">{{ $t('search') }}</span>
       </a>
       <div class="flex-h">
         <TraceSelect
           :hasSearch="true"
-          :title="this.$t('service')"
+          :title="$t('service')"
           :value="headerSource.currentService"
           @input="chooseService"
           :data="headerSource.serviceSource"
         />
         <div class="mr-10" style="padding: 3px 15px 0">
-          <div class="sm grey">{{ this.$t('endpointName') }}</div>
+          <div class="sm grey">{{ $t('endpointName') }}</div>
           <input type="text" v-model="endpointName" class="rk-profile-header-input" />
         </div>
       </div>
-      <rk-sidebox class="profile-task-box" width="600px" :title="this.$t('newTask')" :show.sync="dialogVisible">
+      <rk-sidebox class="profile-task-box" width="600px" :title="$t('newTask')" :show.sync="dialogVisible">
         <ProfileTask :taskFieldSource="taskFieldSource" :newTaskFields="newTaskFields" @closeSidebox="closeSidebox" />
       </rk-sidebox>
     </div>
@@ -62,49 +62,6 @@ limitations under the License. -->
     private endpointName: string = '';
     private dialogVisible = false;
     private serviceOpt: any;
-
-    private dateFormat(date: Date, step: string) {
-      const year = date.getFullYear();
-      const monthTemp = date.getMonth() + 1;
-      let month: string = `${monthTemp}`;
-      if (monthTemp < 10) {
-        month = `0${monthTemp}`;
-      }
-      if (step === 'MONTH') {
-        return `${year}-${month}`;
-      }
-      const dayTemp = date.getDate();
-      let day: string = `${dayTemp}`;
-      if (dayTemp < 10) {
-        day = `0${dayTemp}`;
-      }
-      if (step === 'DAY') {
-        return `${year}-${month}-${day}`;
-      }
-      const hourTemp = date.getHours();
-      let hour: string = `${hourTemp}`;
-      if (hourTemp < 10) {
-        hour = `0${hourTemp}`;
-      }
-      if (step === 'HOUR') {
-        return `${year}-${month}-${day} ${hour}`;
-      }
-      const minuteTemp = date.getMinutes();
-      let minute: string = `${minuteTemp}`;
-      if (minuteTemp < 10) {
-        minute = `0${minuteTemp}`;
-      }
-      if (step === 'MINUTE') {
-        return `${year}-${month}-${day} ${hour}${minute}`;
-      }
-    }
-
-    private globalTimeFormat(time: Date[]) {
-      return {
-        start: time[0].getTime(),
-        end: time[1].getTime(),
-      };
-    }
 
     private chooseService(item: { key: string; label: string }) {
       this.SET_HEADER_SOURCE({ currentService: item });
@@ -143,20 +100,6 @@ limitations under the License. -->
     outline: 0;
     padding: 2px 5px;
     border-radius: 3px;
-  }
-
-  .rk-profile-header-range,
-  .rk-auto-select {
-    border-radius: 3px;
-    background-color: #fff;
-    padding: 1px;
-    border-radius: 3px;
-
-    input {
-      width: 38px;
-      border-style: unset;
-      outline: 0;
-    }
   }
 
   .rk-profile-header-btn {

@@ -14,46 +14,50 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 <template>
   <div
-    class="rk-dashboard-bar-select flex-h"
+    class="rk-dashboard-bar-select cp flex-h"
     v-clickout="
       () => {
         visible = false;
-        search = '';
       }
     "
-    :class="{ active: visible, cp: selectable, cd: !selectable }"
+    :class="{ active: visible }"
   >
-    <div class="rk-dashboard-bar-i flex-h" @click="selectable && (visible = !visible)">
+    <div class="rk-dashboard-bar-i flex-h" @click="visible = !visible">
       <svg class="icon lg mr-15">
         <use :xlink:href="`#${icon}`"></use>
       </svg>
       <div class="mr-15 rk-dashboard-bar-i-text">
         <div class="sm grey">{{ title }}</div>
-        <div class="ell" v-tooltip:right.ellipsis="current.label || ''">
+        <div class="selector-ell" v-tooltip:right.ellipsis="current.label || ''">
           {{ current.label }}
         </div>
       </div>
-      <svg v-if="selectable" class="icon lg trans" :style="`transform: rotate(${visible ? 180 : 0}deg)`">
+      <svg class="icon lg trans" :style="`transform: rotate(${visible ? 180 : 0}deg)`">
         <use xlink:href="#arrow-down"></use>
       </svg>
     </div>
-    <div class="rk-dashboard-sel" v-if="visible && selectable">
+    <div class="rk-dashboard-sel" v-if="visible">
       <div>
-        <input type="text" class="rk-dashboard-sel-search" v-model="search" />
-        <svg class="icon sm close" @click="search = ''" v-if="search">
+        <input type="text" class="rk-dashboard-sel-search" v-model="search" @change="fliterEndpoints" />
+        <svg
+          class="icon sm close"
+          style="margin-top: 3px;"
+          @click="
+            search = '';
+            fliterEndpoints();
+          "
+        >
           <use xlink:href="#clear"></use>
         </svg>
       </div>
-      <div class="rk-dashboard-opt-wrapper scroll_hide">
-        <div
-          class="rk-dashboard-opt ell"
-          @click="i.disabled ? () => {} : handleSelect(i)"
-          :class="{ active: i.key === current.key, disabled: i.disabled }"
+      <div class="rk-dashboard-opt-wrapper">
+        <EndpointOpt
+          @handleSelect="handleSelect"
+          :class="{ active: i.key === current.key }"
           v-for="i in filterData"
           :key="i.key"
-        >
-          {{ i.label }}
-        </div>
+          :data="i"
+        />
       </div>
     </div>
   </div>
@@ -61,24 +65,31 @@ limitations under the License. -->
 
 <script lang="ts">
   import { Vue, Component, Prop } from 'vue-property-decorator';
-  @Component
-  export default class ToolBarSelect extends Vue {
-    @Prop() public data!: any;
-    @Prop() public current!: any;
-    @Prop() public title!: string;
-    @Prop() public icon!: string;
-    @Prop({ type: Boolean, default: true }) public selectable!: boolean;
-    public search: string = '';
-    public visible: boolean = false;
+  import { Action } from 'vuex-class';
+  import EndpointOpt from './tool-bar-endpoint-select-opt.vue';
+  @Component({ components: { EndpointOpt } })
+  export default class ToolBarEndpointSelect extends Vue {
+    @Action('GET_SERVICE_ENDPOINTS') private GET_SERVICE_ENDPOINTS: any;
+    @Prop() private data!: any;
+    @Prop() private current!: any;
+    @Prop() private title!: string;
+    @Prop() private icon!: string;
+    @Prop() private currentService: any;
+    private search: string = '';
+    private visible: boolean = false;
+
     get filterData() {
       return this.data.filter((i: any) => i.label.toUpperCase().indexOf(this.search.toUpperCase()) !== -1);
     }
-    public handleOpen() {
+    private handleOpen() {
       this.visible = true;
     }
-    public handleSelect(i: any) {
+    private handleSelect(i: any) {
       this.$emit('onChoose', i);
       this.visible = false;
+    }
+    private fliterEndpoints() {
+      this.GET_SERVICE_ENDPOINTS({ service: this.currentService, keyword: this.search });
     }
   }
 </script>
@@ -97,7 +108,11 @@ limitations under the License. -->
     }
   }
   .rk-dashboard-bar-i-text {
-    max-width: 200px;
+    max-width: 350px;
+    .selector-ell {
+      word-wrap: break-word;
+      word-break: break-all;
+    }
   }
   .rk-dashboard-bar-i {
     height: 100%;
@@ -131,9 +146,6 @@ limitations under the License. -->
     &.active,
     &:hover {
       background-color: #40454e;
-    }
-    &.disabled {
-      cursor: not-allowed;
     }
   }
   .rk-dashboard-sel-search {

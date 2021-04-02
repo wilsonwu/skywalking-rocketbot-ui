@@ -46,7 +46,7 @@ limitations under the License. -->
 <script lang="ts">
   import { Component, Vue, Watch } from 'vue-property-decorator';
   import { Action, Getter, State, Mutation } from 'vuex-class';
-  import ToolBar from '@/views/components/dashboard/tool-bar.vue';
+  import ToolBar from '@/views/components/dashboard/tool-bar/tool-bar.vue';
   import ToolGroup from '@/views/components/dashboard/tool-group.vue';
   import ToolNav from '@/views/components/dashboard/tool-nav.vue';
   import DashboardItem from '@/views/components/dashboard/dashboard-item.vue';
@@ -146,20 +146,3 @@ limitations under the License. -->
     }
   }
 </script>
-<style lang="scss">
-  .dashboard-container {
-    overflow: auto;
-    padding: 20px 15px;
-    height: 100%;
-    flex-grow: 1;
-  }
-  .rk-add-dashboard-item {
-    height: 342px;
-    text-align: center;
-    line-height: 250px;
-    border: 1px dashed rgba(196, 200, 225, 0.5);
-    cursor: pointer;
-    display: inline-block;
-    font-size: 16px;
-  }
-</style>
